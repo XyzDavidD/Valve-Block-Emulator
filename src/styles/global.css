@@ -21,8 +21,10 @@
 html,
 body,
 #root {
-  min-height: 100%;
+  width: 100%;
+  height: 100%;
   margin: 0;
+  overflow: hidden;
 }
 
 button {
@@ -30,15 +32,15 @@ button {
 }
 
 .app-shell {
-  min-height: 100vh;
-  padding: 24px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(238, 242, 245, 0.9)),
-    radial-gradient(circle at 22% 12%, rgba(116, 131, 146, 0.12), transparent 30%);
+  width: 100vw;
+  height: 100vh;
+  padding: 0;
+  background: #fff;
+  overflow: hidden;
 }
 
 .workspace {
-  width: min(1580px, 100%);
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -116,18 +118,21 @@ h2 {
 .diagram-panel {
   min-width: 0;
   overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: none;
 }
 
 .hydraulic-svg {
   display: block;
-  width: 100%;
-  height: auto;
-  min-height: 560px;
+  width: 100vw;
+  height: 100vh;
   touch-action: manipulation;
 }
 
 .diagram-background {
-  fill: #fbfcfd;
+  fill: #fff;
 }
 
 .diagram-title {
@@ -178,10 +183,23 @@ h2 {
   fill: #5f656b;
 }
 
+.reservoir-shell-underlay {
+  fill: #92979b;
+  stroke: #4c5259;
+  stroke-width: 2;
+}
+
 .reservoir-shell {
-  fill: #8f9498;
+  fill: #a7abae;
   stroke: #4c5259;
   stroke-width: 2.5;
+}
+
+.reservoir-top-rail,
+.reservoir-bottom-rail {
+  fill: url("#machining");
+  stroke: #737a81;
+  stroke-width: 2;
 }
 
 .reservoir-window {
@@ -189,8 +207,33 @@ h2 {
   opacity: 0.92;
 }
 
+.reservoir-piston {
+  fill: url("#machining");
+  stroke: #565d64;
+  stroke-width: 2;
+}
+
+.reservoir-green-chamber {
+  stroke: #0f7d2f;
+  stroke-width: 2;
+}
+
+.reservoir-seal {
+  fill: #101216;
+}
+
+.reservoir-foot {
+  fill: #4d5156;
+  stroke: #30343a;
+  stroke-width: 2;
+}
+
 .black-cap {
   fill: #0f1114;
+}
+
+.pressure-switch-backplate {
+  fill: #15191e;
 }
 
 .flow-base {
@@ -211,23 +254,46 @@ h2 {
   opacity: var(--flow-opacity);
 }
 
+.flow-junction {
+  opacity: var(--flow-opacity);
+}
+
+.flow-junction.red {
+  fill: var(--red);
+}
+
+.flow-junction.green {
+  fill: var(--green);
+}
+
 .flow-dash {
   fill: none;
-  stroke-dasharray: 5 16;
+  stroke-dasharray: 2 18;
   stroke-linejoin: round;
   stroke-linecap: round;
-  stroke-width: 2.4;
-  animation: flow-move var(--flow-duration) linear infinite;
+  stroke-width: 3;
+  opacity: calc(0.24 + var(--pump-power, 0.25) * 0.15);
+  animation-duration: var(--flow-duration);
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }
 
 .flow-dash.red {
-  stroke: #ffd3cc;
-  marker-end: url("#flow-arrow-red");
+  stroke: #ffb1a8;
+  marker-end: none;
 }
 
 .flow-dash.green {
-  stroke: #d4ffdc;
-  marker-end: url("#flow-arrow-green");
+  stroke: #82ff8d;
+  marker-end: none;
+}
+
+.flow-forward {
+  animation-name: flow-move-forward;
+}
+
+.flow-reverse {
+  animation-name: flow-move-reverse;
 }
 
 .restricted .flow-dash {
@@ -248,6 +314,62 @@ h2 {
   fill: url("#dark-metal");
 }
 
+.middle-green-area,
+.middle-red-area {
+  stroke: #4f565d;
+  stroke-width: 2.5;
+}
+
+.middle-green-area {
+  fill: var(--green);
+}
+
+.middle-red-area,
+.middle-red-piston {
+  fill: var(--red);
+}
+
+.middle-land {
+  fill: url("#metal");
+  stroke: #596168;
+  stroke-width: 2.2;
+}
+
+.middle-spool-stop {
+  fill: #90979d;
+  stroke: #424950;
+  stroke-width: 2.2;
+}
+
+.middle-red-piston {
+  stroke: #8f1110;
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.middle-seal {
+  fill: #101418;
+}
+
+.middle-spring-box {
+  fill: rgba(28, 175, 66, 0.55);
+  stroke: #4e565e;
+  stroke-width: 2.2;
+}
+
+.middle-spring {
+  fill: none;
+  stroke: #161a1e;
+  stroke-width: 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.middle-chamber-edge {
+  stroke: #4f565d;
+  stroke-width: 2.2;
+}
+
 .coil-fill {
   fill: #eeeeef;
   stroke: #8e969f;
@@ -259,11 +381,111 @@ h2 {
   stroke: #72a7dd;
   stroke-width: 4;
   stroke-linejoin: round;
+  stroke-linecap: square;
 }
 
 .thin-line {
   stroke: #69727a;
   stroke-width: 2;
+}
+
+.thin-line.red-tint {
+  stroke: var(--red);
+}
+
+.pressure-thread-nose,
+.solenoid-thread-nose {
+  fill: #a9aeb3;
+  stroke: #4e555c;
+  stroke-width: 2;
+}
+
+.pressure-thread-lines {
+  stroke: #4b5259;
+  stroke-width: 1.6;
+}
+
+.pressure-switch-shell,
+.solenoid-shell {
+  fill: url("#metal");
+  stroke: #5f676f;
+  stroke-width: 2;
+}
+
+.pressure-switch-contact {
+  fill: #f7f9fb;
+  stroke: #7d858e;
+  stroke-width: 1.8;
+}
+
+.pressure-switch-spring {
+  fill: none;
+  stroke: #d9dde1;
+  stroke-width: 4;
+  stroke-dasharray: 6 4;
+}
+
+.pressure-switch-plunger {
+  stroke: #8f1110;
+  stroke-width: 2;
+  transition: fill 160ms ease, stroke 160ms ease;
+}
+
+.pressure-switch-plunger.green-fill {
+  stroke: #0f7d2f;
+}
+
+.pressure-switch-pad {
+  fill: #101418;
+}
+
+.pressure-switch-side-guide {
+  fill: #191f25;
+  opacity: 0.9;
+}
+
+.left-black-mount {
+  fill: #101216;
+}
+
+.solenoid-black-core {
+  fill: #111419;
+}
+
+.solenoid-spring {
+  fill: none;
+  stroke: #11151a;
+  stroke-width: 4;
+  stroke-linejoin: miter;
+}
+
+.left-coil-housing {
+  fill: url("#metal");
+  stroke: #606870;
+  stroke-width: 3;
+}
+
+.left-coil-window {
+  fill: #f7f8fa;
+  stroke: #f7f8fa;
+  stroke-width: 2;
+}
+
+.left-coil-core {
+  fill: #0e1013;
+  stroke: var(--red);
+  stroke-width: 5;
+}
+
+.left-coil-lines {
+  fill: none;
+  stroke: #e04439;
+  stroke-width: 3;
+}
+
+.left-coil-white-side {
+  fill: #f7f8fa;
+  stroke: #f7f8fa;
 }
 
 .spring-line {
@@ -333,7 +555,49 @@ h2 {
   stroke-width: 2;
 }
 
-.bleed-body,
+.top-threaded-port {
+  fill: #a6acb1;
+  stroke: #4a5056;
+  stroke-width: 2;
+}
+
+.top-port-collar {
+  fill: #8f9498;
+  stroke: #555d64;
+  stroke-width: 2;
+}
+
+.top-port-seat {
+  fill: rgba(236, 239, 242, 0.96);
+  stroke: #8e969f;
+  stroke-width: 2;
+}
+
+.top-port-fluid {
+  stroke: rgba(0, 0, 0, 0.08);
+  stroke-width: 1;
+}
+
+.gauge-pressure-tube {
+  fill: none;
+  stroke: var(--red);
+  stroke-width: 4;
+  stroke-linejoin: miter;
+  stroke-linecap: square;
+}
+
+.gauge-mount-stem {
+  fill: #6d7378;
+  stroke: #565d64;
+  stroke-width: 1.5;
+}
+
+.gauge-mount-foot {
+  fill: #6d7378;
+  stroke: #565d64;
+  stroke-width: 1.5;
+}
+
 .indicator-line {
   stroke: #454b50;
   stroke-width: 8;
@@ -352,6 +616,53 @@ h2 {
   stroke-width: 1.5;
 }
 
+.sight-dark-block {
+  fill: #606265;
+  stroke: #474b50;
+  stroke-width: 2;
+}
+
+.sight-shadow {
+  fill: #101216;
+  opacity: 0.96;
+}
+
+.sight-glass-channel {
+  fill: rgba(248, 250, 251, 0.78);
+  stroke: #d7dadd;
+  stroke-width: 1.4;
+}
+
+.sight-fluid {
+  stroke: #0f7d2f;
+  stroke-width: 2;
+}
+
+.bleed-threaded-sleeve,
+.bleed-threaded-end {
+  fill: #80858a;
+  stroke: #3e454b;
+  stroke-width: 2;
+}
+
+.bleed-thread-lines {
+  fill: none;
+  stroke: #20252b;
+  stroke-width: 2;
+  stroke-linejoin: miter;
+}
+
+.bleed-green-plug {
+  stroke: #0f7d2f;
+  stroke-width: 2;
+}
+
+.level-collar {
+  fill: #a9adaf;
+  stroke: #5a6168;
+  stroke-width: 2;
+}
+
 .level-red-mark {
   stroke: var(--red);
   stroke-width: 3;
@@ -363,53 +674,236 @@ h2 {
   stroke-width: 2;
 }
 
+.monitor-threaded-body {
+  fill: #9da3a8;
+  stroke: #4d5359;
+  stroke-width: 2;
+}
+
+.monitor-thread-lines,
+.relief-thread-lines {
+  fill: none;
+  stroke: #40464c;
+  stroke-width: 1.7;
+}
+
+.monitor-spring {
+  fill: none;
+  stroke: #11151a;
+  stroke-width: 3.3;
+  stroke-linejoin: round;
+}
+
+.monitor-pipe {
+  stroke: #8f1110;
+  stroke-width: 2;
+}
+
+.monitor-red-chamber {
+  fill: var(--red);
+  stroke: #f5f5f5;
+  stroke-width: 6;
+}
+
+.monitor-stop {
+  fill: #f5f5f5;
+  stroke: #8f1110;
+  stroke-width: 2;
+}
+
 .green-spring-box {
   fill: rgba(28, 175, 66, 0.35);
 }
 
+.relief-cap {
+  stroke: #0f7d2f;
+  stroke-width: 2;
+}
+
+.relief-body {
+  fill: #f8f9fa;
+  stroke: #686f76;
+  stroke-width: 2.2;
+}
+
+.relief-stem,
+.relief-foot {
+  fill: #a6acb1;
+  stroke: #596168;
+  stroke-width: 2;
+}
+
 .pump-housing {
-  fill: #6d7278;
+  fill: #9fa3a5;
   stroke: #4d5359;
   stroke-width: 2.5;
 }
 
-.pump-chamber {
-  opacity: calc(0.55 + var(--pump-power) * 0.16);
+.pump-hatch-lines {
+  fill: none;
+  stroke: #7c8287;
+  stroke-width: 1.4;
+  opacity: 0.58;
 }
 
-.pump-rotor {
-  animation: pump-spin var(--pump-duration) linear infinite;
+.pump-cavity {
+  stroke: #0f7d2f;
+  stroke-width: 2;
+  opacity: 0.95;
+}
+
+.pump-green-return {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 16;
+  stroke-linejoin: miter;
+  stroke-linecap: square;
+}
+
+.pump-dark-top {
+  fill: url("#dark-metal");
+  stroke: #4a5056;
+  stroke-width: 2;
+}
+
+.pump-feed {
+  fill: none;
+  stroke-width: 15;
+  stroke-linecap: square;
+}
+
+.pump-feed.red {
+  stroke: var(--red);
+}
+
+.pump-feed.green {
+  stroke: var(--green);
+}
+
+.pump-cartridge {
   transform-box: fill-box;
   transform-origin: center center;
 }
 
-.pump-blade {
-  stroke: #5d6369;
-  stroke-width: 10;
+.pump-cartridge-glass {
+  fill: url("#metal");
+  stroke: rgba(42, 48, 54, 0.55);
+  stroke-width: 2;
+  opacity: 0.92;
+}
+
+.pump-carousel-slug {
+  transform-box: fill-box;
+  transform-origin: center center;
+}
+
+.pump-carousel-slug.red {
+  fill: rgba(183, 25, 24, 0.9);
+}
+
+.pump-carousel-slug.green {
+  fill: rgba(28, 175, 66, 0.92);
+}
+
+.pump.auto-running .pump-carousel-slug.red {
+  animation: pump-slug-red-carousel var(--pump-duration) linear infinite;
+}
+
+.pump.auto-running .pump-carousel-slug.green {
+  animation: pump-slug-green-carousel var(--pump-duration) linear infinite;
+}
+
+.pump-cartridge-highlight {
+  stroke: rgba(255, 255, 255, 0.72);
+  stroke-width: 2;
   stroke-linecap: round;
 }
 
-.pump-blade.secondary {
-  stroke-width: 7;
-  opacity: 0.7;
+.pump-static-shaft {
+  fill: url("#metal");
+  stroke: #636a71;
+  stroke-width: 2;
 }
 
-.pump-hub {
-  fill: #2d3238;
+.pump-crossbar {
+  fill: #697078;
+  stroke: #3f464d;
+  stroke-width: 2;
+}
+
+.pump-backplate-static {
+  fill: #70777e;
+  stroke: #4b5259;
+  stroke-width: 2;
+}
+
+.pump-bottom-notch {
+  fill: #f7f8f9;
+  stroke: #858c93;
+  stroke-width: 2;
 }
 
 .pump-piston {
-  fill: #b8bec5;
+  fill: #bcc3ca;
   stroke: #626970;
   stroke-width: 2;
-  animation: piston-stroke var(--pump-duration) ease-in-out infinite;
+  animation: pump-piston-stroke var(--pump-duration) ease-in-out infinite;
 }
 
-.pump-plate {
-  fill: #e29772;
+.pump-piston.right {
+  animation-delay: calc(var(--pump-duration) / -2);
+}
+
+.pump-drive-shaft {
+  fill: #aeb5bc;
+  stroke: #5b6269;
+  stroke-width: 2;
+}
+
+.pump-swashplate {
+  fill: #626a70;
+  stroke: #3f454b;
+  stroke-width: 2;
+  animation: pump-swashplate-rock var(--pump-duration) ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center center;
+}
+
+.pump-backplate {
+  fill: #e29b74;
   stroke: #914d36;
   stroke-width: 2;
-  animation: backplate-stroke var(--pump-duration) ease-in-out infinite;
+  animation: pump-backplate-stroke var(--pump-duration) ease-in-out infinite;
+}
+
+.pump-center-rod {
+  stroke: #171b20;
+  stroke-width: 9;
+  stroke-linecap: square;
+}
+
+.auto-control {
+  cursor: pointer;
+  opacity: 0.82;
+}
+
+.auto-control rect {
+  fill: #d9d9d9;
+  stroke: #a8a8a8;
+  stroke-width: 2;
+}
+
+.auto-control text {
+  fill: #7b76a8;
+  font-family: "Courier New", monospace;
+  font-size: 18px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.auto-control.active rect {
+  fill: #c9c9df;
+  stroke: #8b8bc2;
 }
 
 .gauge-bezel {
@@ -451,35 +945,122 @@ h2 {
   text-anchor: middle;
 }
 
-.label-leaders {
-  pointer-events: none;
-}
-
-.label-leaders path {
-  fill: none;
-  stroke: #818b95;
-  stroke-width: 1.4;
-  stroke-linecap: round;
-  stroke-dasharray: 3 5;
-  opacity: 0.7;
-}
-
 .labels {
   pointer-events: none;
 }
 
-.label-callout rect {
-  fill: rgba(255, 255, 255, 0.92);
-  stroke: #c8d0d8;
-  stroke-width: 1.1;
+.labels text {
+  fill: #343b44;
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+  paint-order: stroke fill;
+  stroke: rgba(255, 255, 255, 0.96);
+  stroke-linejoin: round;
+  stroke-width: 7px;
+  text-anchor: start;
 }
 
-.label-callout text {
-  fill: #343b44;
-  font-size: 15px;
-  font-weight: 850;
-  letter-spacing: 0.015em;
-  text-anchor: middle;
+.labels .label-left {
+  text-anchor: end;
+}
+
+.reference-stick {
+  cursor: grab;
+  outline: none;
+  touch-action: none;
+}
+
+.reference-stick.dragging {
+  cursor: grabbing;
+}
+
+.reference-stick-hit-area {
+  fill: transparent;
+  stroke: none;
+}
+
+.reference-stick-arc {
+  fill: none;
+  stroke: #6f747a;
+  stroke-width: 3.2;
+}
+
+.reference-stick-tick {
+  stroke: #5f666d;
+  stroke-width: 3.2;
+  stroke-linecap: square;
+}
+
+.reference-stick-shadow {
+  stroke: rgba(25, 29, 33, 0.22);
+  stroke-width: 16;
+  stroke-linecap: round;
+  transform: translate(8px, 6px);
+}
+
+.reference-stick-shaft {
+  stroke: url("#metal");
+  stroke-width: 12;
+  stroke-linecap: round;
+}
+
+.reference-stick-highlight {
+  stroke: rgba(255, 255, 255, 0.78);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.reference-collar {
+  fill: #a7aaad;
+  stroke: #5c6268;
+  stroke-width: 2.2;
+}
+
+.reference-collar-line {
+  stroke: #676e74;
+  stroke-width: 2;
+}
+
+.reference-grip-main {
+  fill: #bfc4c7;
+  stroke: #3e454b;
+  stroke-width: 2.2;
+}
+
+.reference-grip-cap {
+  fill: #2f5a7a;
+  stroke: #1d3348;
+  stroke-width: 2.4;
+}
+
+.reference-grip-ridges {
+  fill: none;
+  stroke: #626a70;
+  stroke-width: 2;
+  opacity: 0.78;
+}
+
+.reference-grip-end {
+  fill: #82888d;
+  stroke: #4f565c;
+  stroke-width: 2;
+}
+
+.reference-pivot {
+  fill: #a8adb1;
+  stroke: #3b4147;
+  stroke-width: 4.2;
+}
+
+.reference-pivot-ring {
+  fill: none;
+  stroke: #e4e7e9;
+  stroke-width: 4;
+}
+
+.reference-pivot-core {
+  fill: #272c31;
 }
 
 .test-switch-callout path {
@@ -731,29 +1312,99 @@ h2 {
   }
 }
 
-@keyframes pump-spin {
+@keyframes flow-move-forward {
+  from {
+    stroke-dashoffset: 0;
+  }
   to {
-    transform: rotate(360deg);
+    stroke-dashoffset: -100;
   }
 }
 
-@keyframes piston-stroke {
-  0%,
-  100% {
-    transform: translateY(-6px);
+@keyframes flow-move-reverse {
+  from {
+    stroke-dashoffset: 0;
   }
-  50% {
-    transform: translateY(8px);
+  to {
+    stroke-dashoffset: 100;
   }
 }
 
-@keyframes backplate-stroke {
+@keyframes pump-piston-stroke {
   0%,
   100% {
-    transform: translateY(-5px);
+    transform: translateY(-10px);
   }
   50% {
-    transform: translateY(6px);
+    transform: translateY(12px);
+  }
+}
+
+@keyframes pump-swashplate-rock {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+@keyframes pump-backplate-stroke {
+  0%,
+  100% {
+    transform: translateY(-12px);
+  }
+  50% {
+    transform: translateY(12px);
+  }
+}
+
+@keyframes pump-slug-red-carousel {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  42% {
+    opacity: 1;
+    transform: translateX(62px);
+  }
+  50% {
+    opacity: 0;
+    transform: translateX(62px);
+  }
+  51% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  64%,
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pump-slug-green-carousel {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  42% {
+    opacity: 1;
+    transform: translateX(-62px);
+  }
+  50% {
+    opacity: 0;
+    transform: translateX(-62px);
+  }
+  51% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  64%,
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 

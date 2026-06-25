@@ -60,11 +60,11 @@ export function useEmulatorState() {
       lastTimeRef.current = now;
 
       if (autoMode) {
-        autoPhaseRef.current += delta * 0.62;
+        autoPhaseRef.current += delta * 0.82;
       }
 
-      const targetStick = autoMode ? Math.sin(autoPhaseRef.current) * 0.58 : manualStickRef.current;
-      const smoothing = autoMode ? 0.035 : 0.24;
+      const targetStick = autoMode ? Math.sin(autoPhaseRef.current) * 0.92 : manualStickRef.current;
+      const smoothing = autoMode ? 0.06 : 0.32;
       const nextStick = lerp(currentStickRef.current, targetStick, smoothing);
       const movementSpeed = Math.min(Math.abs(nextStick - currentStickRef.current) / delta, 1.2);
       currentStickRef.current = clamp(nextStick, -1, 1);
@@ -106,7 +106,7 @@ export function useEmulatorState() {
       if (!next) {
         manualStickRef.current = currentStickRef.current;
       } else {
-        const normalized = clamp(currentStickRef.current / 0.58, -1, 1);
+        const normalized = clamp(currentStickRef.current / 0.92, -1, 1);
         autoPhaseRef.current = Math.asin(normalized);
         lastTimeRef.current = undefined;
       }
