@@ -135,6 +135,197 @@ h2 {
   fill: #fff;
 }
 
+.newbuild-asset {
+  pointer-events: none;
+}
+
+.newbuild-assembled-diagram {
+  isolation: isolate;
+}
+
+.newbuild-tubes {
+  pointer-events: none;
+}
+
+.newbuild-tube-base,
+.newbuild-tube-light {
+  fill: none;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.newbuild-tube-base {
+  stroke-width: 17;
+  opacity: 0.96;
+}
+
+.newbuild-tube-base.red {
+  stroke: #ac1916;
+}
+
+.newbuild-tube-base.green {
+  stroke: #24a737;
+}
+
+.newbuild-tube-base.restricted {
+  opacity: 0.42;
+}
+
+.newbuild-tube-light {
+  stroke-width: 3.2;
+  stroke-dasharray: 3 18;
+  opacity: 0;
+  animation-duration: var(--tube-duration);
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+.newbuild-tube-light.red {
+  stroke: #ff9d96;
+}
+
+.newbuild-tube-light.green {
+  stroke: #8aff96;
+}
+
+.newbuild-tube-light.restricted {
+  opacity: 0;
+}
+
+.newbuild-tubes.active .newbuild-tube-light {
+  opacity: 0.58;
+}
+
+.newbuild-tubes.active .newbuild-tube-light.restricted {
+  opacity: 0.18;
+}
+
+.newbuild-middle-red-patch {
+  fill: #ac1916;
+  opacity: 1;
+  transition: opacity 160ms ease;
+}
+
+.newbuild-middle-red-patch.restricted {
+  opacity: 0.42;
+}
+
+.newbuild-flow .flow-base {
+  stroke-width: 18;
+}
+
+.newbuild-flow .flow-dash {
+  stroke-width: 3.2;
+}
+
+.newbuild-pressure-state {
+  stroke-width: 2;
+  transition: fill 160ms ease, stroke 160ms ease;
+}
+
+.newbuild-pressure-state.red-fill {
+  stroke: #7c1111;
+}
+
+.newbuild-pressure-state.green-fill {
+  stroke: #0f7d2f;
+}
+
+.newbuild-solenoid-hotspot {
+  cursor: pointer;
+}
+
+.newbuild-hotspot-shape {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.newbuild-gauge-needle line {
+  stroke: #343a42;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.newbuild-core-detail {
+  pointer-events: none;
+}
+
+.newbuild-labels text {
+  font-size: 19px;
+}
+
+.newbuild2-svg {
+  background: #fff;
+}
+
+.newbuild2-valve-image {
+  pointer-events: none;
+}
+
+.newbuild2-labels text {
+  font-size: 19px;
+}
+
+.newbuild2-flow-overlay {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.newbuild2-flow-overlay.active {
+  opacity: 1;
+}
+
+.newbuild2-flow-shape {
+  opacity: 0.38;
+}
+
+.newbuild2-flow-shape.red {
+  fill: url("#newbuild2-red-flow-pattern");
+}
+
+.newbuild2-flow-shape.green {
+  fill: url("#newbuild2-green-flow-pattern");
+}
+
+.newbuild2-pattern-line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 2.8;
+}
+
+.newbuild2-pattern-line.red {
+  stroke: #ffd6d2;
+}
+
+.newbuild2-pattern-line.green {
+  stroke: #d1ffd5;
+}
+
+.newbuild2-pressure-clock {
+  pointer-events: none;
+}
+
+.newbuild2-pressure-needle {
+  stroke: #20252b;
+  stroke-width: 4.4;
+  stroke-linecap: round;
+  transition: transform 120ms linear;
+}
+
+.newbuild2-pressure-hub {
+  fill: #333941;
+}
+
+.newbuild2-pressure-switch-hotspot rect {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.newbuild2-stick .reference-stick-shaft {
+  stroke: url("#newbuild2-stick-metal");
+}
+
 .diagram-title {
   fill: #101418;
   font-size: 23px;
