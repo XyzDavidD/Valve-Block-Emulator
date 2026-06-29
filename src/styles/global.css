@@ -280,12 +280,117 @@ h2 {
   opacity: 0.38;
 }
 
-.newbuild2-flow-shape.red {
-  fill: url("#newbuild2-red-flow-pattern");
+.newbuild2-flow-shape.red.vertical {
+  fill: url("#newbuild2-red-flow-vertical-pattern");
 }
 
-.newbuild2-flow-shape.green {
-  fill: url("#newbuild2-green-flow-pattern");
+.newbuild2-flow-shape.red.horizontal {
+  fill: url("#newbuild2-red-flow-horizontal-pattern");
+}
+
+.newbuild2-flow-shape.red.reverse-horizontal {
+  fill: url("#newbuild2-red-flow-reverse-horizontal-pattern");
+}
+
+.newbuild2-flow-shape.green.vertical {
+  fill: url("#newbuild2-green-flow-vertical-pattern");
+}
+
+.newbuild2-flow-shape.green.horizontal {
+  fill: url("#newbuild2-green-flow-horizontal-pattern");
+}
+
+.newbuild2-flow-shape.green.right-horizontal {
+  fill: url("#newbuild2-green-flow-right-horizontal-pattern");
+}
+
+.newbuild2-res-bubbles {
+  pointer-events: none;
+}
+
+.res-bubble-stream circle {
+  fill: #1ea63a;
+  filter: drop-shadow(0 0 7px rgba(42, 226, 60, 0.42));
+}
+
+.newbuild2-air-in-system {
+  pointer-events: none;
+}
+
+.air-chamber-cover {
+  fill: #d7d7d7;
+}
+
+.air-chamber-green {
+  fill: #24a737;
+}
+
+.air-chamber-red {
+  fill: #ac1916;
+}
+
+.air-right-green-cover {
+  fill: #fff;
+}
+
+.air-moving-element {
+  filter: drop-shadow(0 1px 0 rgba(20, 24, 28, 0.18));
+}
+
+.newbuild2-bleed-bubbles {
+  pointer-events: none;
+}
+
+.bleed-bubble-stream circle,
+.bleed-bubble-puddle ellipse {
+  fill: #1ea63a;
+}
+
+.bleed-bubble-stream circle {
+  filter: drop-shadow(0 0 6px rgba(42, 226, 60, 0.42));
+}
+
+.bleed-bubble-puddle {
+  filter: drop-shadow(0 0 9px rgba(28, 218, 43, 0.34));
+  opacity: 0.96;
+}
+
+.newbuild2-bleed-trigger {
+  cursor: pointer;
+  outline: none;
+}
+
+.bleed-trigger-hitbox {
+  fill: transparent;
+  pointer-events: all;
+}
+
+.bleed-trigger-simple-arrow {
+  fill: none;
+  stroke: #2436d8;
+  stroke-linecap: square;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.newbuild2-bleed-trigger:hover .bleed-trigger-simple-arrow,
+.newbuild2-bleed-trigger:focus-visible .bleed-trigger-simple-arrow,
+.newbuild2-bleed-trigger.active .bleed-trigger-simple-arrow {
+  stroke: #1724b8;
+}
+
+.newbuild2-pump-cycle {
+  pointer-events: none;
+}
+
+.pump-cycle-slug image,
+.pump-cycle-holder-wrap,
+.pump-cycle-holder {
+  pointer-events: none;
+}
+
+.pump-cycle-holder {
+  filter: drop-shadow(0 1.2px 0 rgba(20, 24, 28, 0.42));
 }
 
 .newbuild2-pattern-line {
@@ -317,9 +422,142 @@ h2 {
   fill: #333941;
 }
 
+.newbuild2-labels .newbuild2-pressure-readout {
+  fill: #343a42;
+  font-size: 18px;
+  font-weight: 800;
+  paint-order: stroke fill;
+  stroke: rgba(255, 255, 255, 0.96);
+  stroke-linejoin: round;
+  stroke-width: 5px;
+  text-anchor: middle;
+}
+
+.newbuild2-labels .newbuild2-test-alert rect {
+  fill: #14150f;
+  stroke: rgba(255, 255, 255, 0.78);
+  stroke-width: 1.4;
+}
+
+.newbuild2-labels .newbuild2-test-alert text {
+  fill: #f4f943;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: 0;
+  paint-order: normal;
+  stroke: none;
+  text-anchor: start;
+}
+
 .newbuild2-pressure-switch-hotspot rect {
   fill: transparent;
   pointer-events: all;
+}
+
+.newbuild2-training-menu {
+  color: #8f959d;
+  filter: drop-shadow(3px 4px 1px rgba(64, 68, 74, 0.22));
+  font-family: "Courier New", Courier, monospace;
+  letter-spacing: 0;
+  pointer-events: auto;
+}
+
+.training-menu-shell,
+.training-menu-cell {
+  fill: rgba(247, 248, 251, 0.68);
+  stroke: #b9bec6;
+  stroke-width: 2;
+}
+
+.training-menu-shell {
+  stroke: #8d929a;
+  stroke-width: 2.8;
+}
+
+.training-menu-row {
+  cursor: default;
+}
+
+.training-menu-button {
+  cursor: pointer;
+  outline: none;
+}
+
+.training-menu-row text {
+  fill: currentColor;
+  font-size: 28px;
+  font-weight: 400;
+  paint-order: stroke fill;
+  stroke: rgba(255, 255, 255, 0.45);
+  stroke-linejoin: round;
+  stroke-width: 1.3px;
+  text-anchor: middle;
+}
+
+.training-menu-button .training-menu-cell {
+  transition:
+    fill 120ms ease,
+    stroke 120ms ease;
+}
+
+.training-menu-button:hover > .training-menu-cell,
+.training-menu-button:focus-visible > .training-menu-cell,
+.training-menu-button.active > .training-menu-cell,
+.training-menu-abnormal:hover .menu-row-highlight,
+.training-menu-abnormal:focus-visible .menu-row-highlight,
+.training-menu-abnormal.open .menu-row-highlight {
+  fill: rgba(230, 233, 238, 0.92);
+  stroke: #8f949c;
+}
+
+.training-menu-button:active > .training-menu-cell {
+  fill: rgba(216, 220, 228, 0.96);
+  stroke: #737a83;
+}
+
+.training-menu-button:hover,
+.training-menu-button:focus-visible,
+.training-menu-button.active,
+.training-menu-abnormal:hover,
+.training-menu-abnormal:focus-visible,
+.training-menu-abnormal.open {
+  color: #737981;
+}
+
+.training-menu-arrow {
+  text-anchor: middle;
+}
+
+.training-submenu {
+  color: #8f959d;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 100ms ease;
+}
+
+.training-menu-abnormal:hover .training-submenu,
+.training-menu-abnormal:focus-visible .training-submenu,
+.training-menu-abnormal:focus-within .training-submenu,
+.training-menu-abnormal.open .training-submenu {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.training-submenu text {
+  text-anchor: start;
+}
+
+.training-submenu-button:hover,
+.training-submenu-button:focus-visible,
+.training-submenu-button.active {
+  color: #737981;
+}
+
+.training-menu-checkbox {
+  fill: rgba(245, 246, 249, 0.8);
+  stroke: #b6bbc3;
+  stroke-width: 2;
 }
 
 .newbuild2-stick .reference-stick-shaft {

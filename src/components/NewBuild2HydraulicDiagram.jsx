@@ -1,9 +1,13 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const stickPivot = { x: 1348, y: 1008 };
 const stickCenterAngle = -48;
 const stickHalfRange = 25;
+const autoCycleSeconds = (Math.PI * 2) / 0.82;
+const autoCycleDuration = `${autoCycleSeconds.toFixed(2)}s`;
+const flowLineDuration = '1.38s';
+const flowLineTravel = 36;
 const artworkBox = { x: 245, y: 150, width: 1080, height: 717 };
 const artworkSource = { x: 0, y: 42, width: 1500, height: 996 };
 
@@ -73,15 +77,108 @@ const RED_FLOW_SHAPES = [
 ];
 
 const ANIMATED_GREEN_FLOW_SHAPES = GREEN_FLOW_SHAPES.filter(
-  (_, index) => ![0, 5, 6, 28].includes(index),
+  (_, index) => ![0, 1, 2, 3, 5, 6, 7, 9, 10, 11, 12, 15, 23, 24, 25, 26, 27, 28, 29].includes(index),
 );
 
 const ANIMATED_RED_FLOW_SHAPES = RED_FLOW_SHAPES.filter(
-  (_, index) => ![0, 1, 3].includes(index),
+  (_, index) => ![0, 1, 3, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 21, 22].includes(index),
 );
+
+const PARTIAL_RED_HORIZONTAL_FLOW_SHAPES = [
+  'M634.666 394.49H410.943V371.776H634.666V394.49Z',
+];
+
+const GREEN_HORIZONTAL_FLOW_INDEXES = new Set([9, 11, 15, 16, 20, 25, 27]);
+const GREEN_RIGHT_HORIZONTAL_FLOW_INDEXES = new Set([19]);
+const RED_HORIZONTAL_FLOW_INDEXES = new Set([5, 6, 7, 9, 10, 12]);
+const RED_REVERSE_HORIZONTAL_FLOW_INDEXES = new Set([20, 23]);
+
+const ANIMATED_GREEN_HORIZONTAL_FLOW_SHAPES = GREEN_FLOW_SHAPES.filter(
+  (_, index) => ANIMATED_GREEN_FLOW_SHAPES.includes(GREEN_FLOW_SHAPES[index]) && GREEN_HORIZONTAL_FLOW_INDEXES.has(index),
+);
+
+const ANIMATED_GREEN_RIGHT_HORIZONTAL_FLOW_SHAPES = GREEN_FLOW_SHAPES.filter(
+  (_, index) => ANIMATED_GREEN_FLOW_SHAPES.includes(GREEN_FLOW_SHAPES[index]) && GREEN_RIGHT_HORIZONTAL_FLOW_INDEXES.has(index),
+);
+
+const ANIMATED_GREEN_VERTICAL_FLOW_SHAPES = GREEN_FLOW_SHAPES.filter(
+  (_, index) => (
+    ANIMATED_GREEN_FLOW_SHAPES.includes(GREEN_FLOW_SHAPES[index])
+    && !GREEN_HORIZONTAL_FLOW_INDEXES.has(index)
+    && !GREEN_RIGHT_HORIZONTAL_FLOW_INDEXES.has(index)
+  ),
+);
+
+const ANIMATED_RED_HORIZONTAL_FLOW_SHAPES = RED_FLOW_SHAPES.filter(
+  (_, index) => ANIMATED_RED_FLOW_SHAPES.includes(RED_FLOW_SHAPES[index]) && RED_HORIZONTAL_FLOW_INDEXES.has(index),
+);
+
+const ANIMATED_RED_REVERSE_HORIZONTAL_FLOW_SHAPES = RED_FLOW_SHAPES.filter(
+  (_, index) => ANIMATED_RED_FLOW_SHAPES.includes(RED_FLOW_SHAPES[index]) && RED_REVERSE_HORIZONTAL_FLOW_INDEXES.has(index),
+);
+
+const ANIMATED_RED_VERTICAL_FLOW_SHAPES = RED_FLOW_SHAPES.filter(
+  (_, index) => (
+    ANIMATED_RED_FLOW_SHAPES.includes(RED_FLOW_SHAPES[index])
+    && !RED_HORIZONTAL_FLOW_INDEXES.has(index)
+    && !RED_REVERSE_HORIZONTAL_FLOW_INDEXES.has(index)
+  ),
+);
+
+const TRAINING_MENU_ITEMS = ['FREEZE', 'CLICKPOINTS', 'TEST', 'ABNORMAL', 'RESET', 'QUIT'];
+const ABNORMAL_MENU_ITEMS = ['PUMP RUNAWAY', 'RES OVERFILL', 'AIR IN SYSTEM', 'PUMP FAILURE'];
+const trainingMenu = {
+  x: 8,
+  y: 780,
+  width: 300,
+  rowHeight: 36,
+};
+const abnormalMenu = {
+  x: trainingMenu.x + trainingMenu.width,
+  width: 340,
+};
+const pumpSource = { x: 387.621, y: 869.092 };
+const pumpOverlay = {
+  slugY: pumpSource.y + 36.7385,
+  leftX: pumpSource.x + 114.328,
+  centerX: pumpSource.x + 164.443,
+  rightX: pumpSource.x + 208.83,
+  slugWidth: 24,
+  slugHeight: 184,
+  holderX: pumpSource.x + 88.8008,
+  holderY: pumpSource.y + 208.5,
+  holderWidth: 158,
+  holderHeight: 24,
+};
+const pumpHolderCenter = {
+  x: pumpOverlay.holderX + pumpOverlay.holderWidth / 2,
+  y: pumpOverlay.holderY + pumpOverlay.holderHeight / 2,
+};
+const airInSystemDelayMs = 2000;
+const airInSystemDurationMs = 10000;
+const airChamber = {
+  leftX: 553.828,
+  redBaseX: 783.361,
+  rightX: 998.453,
+  topY: 454.999,
+  bottomY: 671.956,
+  movingStartX: 665.762,
+  movingY: 291.647,
+  movingWidth: 1143,
+  movingHeight: 544,
+  greenPath: 'M554.009 502.056V454.999H783.249V527.275H748.159V600.107H783.361V671.955H553.828L554.009 454.999',
+  rightUpperGreen: { x: 1060.55, y: 290.853, width: 207.98, height: 234.336 },
+  rightLowerGreen: { x: 1060.55, y: 601.053, width: 191.01, height: 234.336 },
+};
+airChamber.height = airChamber.bottomY - airChamber.topY;
+airChamber.greenWidth = airChamber.redBaseX - airChamber.leftX;
+airChamber.redBaseWidth = airChamber.rightX - airChamber.redBaseX;
+airChamber.travel = airChamber.greenWidth * 0.35;
+airChamber.rightGreenTravel = airChamber.rightUpperGreen.width * 0.35;
 
 export function NewBuild2HydraulicDiagram({
   pressure,
+  pumpSpeed = 0.25,
   flowIntensity,
   solenoidOpen,
   stickPosition,
@@ -93,11 +190,123 @@ export function NewBuild2HydraulicDiagram({
 }) {
   const svgRef = useRef(null);
   const [draggingStick, setDraggingStick] = useState(false);
+  const [abnormalMenuOpen, setAbnormalMenuOpen] = useState(false);
+  const [activeTrainingButton, setActiveTrainingButton] = useState(null);
+  const [activeAbnormalButton, setActiveAbnormalButton] = useState(null);
+  const [autoPressureValue, setAutoPressureValue] = useState(101.3);
+  const [resOverfillAutoStage, setResOverfillAutoStage] = useState('res');
+  const [airBleedActive, setAirBleedActive] = useState(false);
+  const [bleedRainActive, setBleedRainActive] = useState(false);
+  const [airProgress, setAirProgress] = useState(0);
+  const airProgressRef = useRef(0);
+  const pumpFailureMode = activeAbnormalButton === 'PUMP FAILURE';
+  const resOverfillMode = activeAbnormalButton === 'RES OVERFILL';
+  const airInSystemMode = activeAbnormalButton === 'AIR IN SYSTEM';
+  const motionVisualActive = (autoMode || draggingStick) && !pumpFailureMode && !airInSystemMode;
+  const testMode = activeTrainingButton === 'TEST';
   const stickAngle = clamp(stickCenterAngle + stickPosition * stickHalfRange, -73, -23);
   const pressureNeedleAngle = clamp(-118 + ((pressure - 70) / 60) * 236, -118, 118);
-  const valveBlockHref = solenoidOpen ? '/assets/valve-block-red.svg' : '/assets/valve-block-red-light.svg';
+  const displayedPressureNeedleAngle = pumpFailureMode ? 12 : pressureNeedleAngle;
+  const valveBlockHref = (() => {
+    if (pumpFailureMode) return '/assets/valve-block-failure.svg';
+    if (resOverfillMode) {
+      if (resOverfillAutoStage === 'auto') return '/assets/valve-auto1.svg';
+      if (resOverfillAutoStage === 'auto2') return '/assets/valve-auto2.svg';
+      return '/assets/valve-block-res.svg';
+    }
+    if (airInSystemMode) return airBleedActive ? '/assets/valve-block-air.svg' : '/assets/airinsystem.svg';
+    if (testMode) return '/assets/valve-block-test.svg';
+    return solenoidOpen ? '/assets/valve-block-red.svg' : '/assets/valve-block-red-light.svg';
+  })();
   const gaugeCenter = { x: mapArtworkX(338), y: mapArtworkY(96) };
-  const flowDuration = `${Math.max(0.72, 1.85 - flowIntensity * 0.75)}s`;
+  const pumpDuration = '2.24s';
+  const redToCenter = pumpOverlay.centerX - pumpOverlay.leftX;
+  const redToRight = pumpOverlay.rightX - pumpOverlay.leftX;
+  const greenToCenter = pumpOverlay.centerX - pumpOverlay.rightX;
+  const greenToLeft = pumpOverlay.leftX - pumpOverlay.rightX;
+  const airTravel = airChamber.travel * airProgress;
+  const airGreenWidth = airChamber.greenWidth - airTravel;
+  const airRedExpansionX = airChamber.redBaseX - airTravel;
+  const airMovingX = airChamber.movingStartX - airTravel;
+  const airRightGreenCoverWidth = airChamber.rightGreenTravel * airProgress;
+
+  useEffect(() => {
+    if (!motionVisualActive) {
+      setAutoPressureValue(101.3);
+      return undefined;
+    }
+
+    let frameId;
+    let startTime;
+
+    const tickPressure = (now) => {
+      startTime ??= now;
+      const elapsed = (now - startTime) / 1000;
+      const phase = (Math.sin((elapsed / autoCycleSeconds) * Math.PI * 2 - Math.PI / 2) + 1) / 2;
+      setAutoPressureValue(101.3 + phase * 1.7);
+      frameId = requestAnimationFrame(tickPressure);
+    };
+
+    frameId = requestAnimationFrame(tickPressure);
+
+    return () => cancelAnimationFrame(frameId);
+  }, [motionVisualActive]);
+
+  useEffect(() => {
+    if (!resOverfillMode || !autoMode) {
+      setResOverfillAutoStage('res');
+      return undefined;
+    }
+
+    setResOverfillAutoStage('res');
+    const timers = [
+      setTimeout(() => setResOverfillAutoStage('auto'), 2000),
+      setTimeout(() => setResOverfillAutoStage('auto2'), 5200),
+      setTimeout(() => setResOverfillAutoStage('auto'), 8200),
+      setTimeout(() => setResOverfillAutoStage('auto2'), 10200),
+    ];
+
+    return () => timers.forEach((timer) => clearTimeout(timer));
+  }, [autoMode, resOverfillMode]);
+
+  useEffect(() => {
+    airProgressRef.current = airProgress;
+  }, [airProgress]);
+
+  useEffect(() => {
+    if (!airInSystemMode || !airBleedActive) {
+      airProgressRef.current = 0;
+      setAirProgress(0);
+      return undefined;
+    }
+
+    if (!bleedRainActive || airProgressRef.current >= 1) return undefined;
+
+    let frameId;
+    let startTime;
+    const startProgress = airProgressRef.current;
+
+    const timer = setTimeout(() => {
+      const tickAir = (now) => {
+        startTime ??= now;
+        const elapsed = now - startTime;
+        const progress = clamp(startProgress + elapsed / airInSystemDurationMs, 0, 1);
+        airProgressRef.current = progress;
+        setAirProgress(progress);
+
+        if (progress < 1) {
+          frameId = requestAnimationFrame(tickAir);
+        }
+      };
+
+      frameId = requestAnimationFrame(tickAir);
+    }, startProgress === 0 ? airInSystemDelayMs : 0);
+
+    return () => {
+      clearTimeout(timer);
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [airBleedActive, airInSystemMode, bleedRainActive]);
 
   const setStickFromPointer = useCallback(
     (event) => {
@@ -122,6 +331,42 @@ export function NewBuild2HydraulicDiagram({
     }
   };
 
+  const handleTrainingButtonKeyDown = (event, action) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      action();
+    }
+  };
+
+  const activateTrainingButton = (item) => {
+    setActiveTrainingButton((current) => (current === item ? null : item));
+    if (item !== 'ABNORMAL') {
+      setAbnormalMenuOpen(false);
+      setActiveAbnormalButton(null);
+      setAirBleedActive(false);
+      setBleedRainActive(false);
+    }
+  };
+
+  const activateAbnormalButton = (item) => {
+    setActiveTrainingButton('ABNORMAL');
+    setActiveAbnormalButton(item);
+    setAirBleedActive(false);
+    setBleedRainActive(false);
+    setAbnormalMenuOpen(true);
+  };
+
+  const activateAirBleed = () => {
+    if (airInSystemMode) {
+      if (!airBleedActive) {
+        setAirBleedActive(true);
+        setBleedRainActive(true);
+      } else {
+        setBleedRainActive((current) => !current);
+      }
+    }
+  };
+
   return (
     <section className="diagram-panel" aria-label="Hydraulic valve block diagram using exported SVG artwork">
       <svg
@@ -137,14 +382,88 @@ export function NewBuild2HydraulicDiagram({
             <stop offset="52%" stopColor="#b6bdc2" />
             <stop offset="100%" stopColor="#737b83" />
           </linearGradient>
-          <pattern id="newbuild2-red-flow-pattern" width="36" height="26" patternUnits="userSpaceOnUse">
-            <path d="M1 8 H10 M21 8 H31 M8 20 H20" className="newbuild2-pattern-line red" />
-            <animateTransform attributeName="patternTransform" type="translate" from="-36 0" to="0 0" dur={flowDuration} repeatCount="indefinite" />
+          <pattern id="newbuild2-red-flow-vertical-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M5 8 H15 M22 18 H33 M8 30 H19" className="newbuild2-pattern-line red" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`0 ${flowLineTravel}`}
+              to="0 0"
+              dur={flowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
           </pattern>
-          <pattern id="newbuild2-green-flow-pattern" width="36" height="26" patternUnits="userSpaceOnUse">
-            <path d="M1 7 H11 M22 7 H32 M9 20 H21" className="newbuild2-pattern-line green" />
-            <animateTransform attributeName="patternTransform" type="translate" from="36 0" to="0 0" dur={flowDuration} repeatCount="indefinite" />
+          <pattern id="newbuild2-red-flow-horizontal-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M5 8 H15 M22 18 H33 M8 30 H19" className="newbuild2-pattern-line red" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`-${flowLineTravel} 0`}
+              to="0 0"
+              dur={flowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
           </pattern>
+          <pattern id="newbuild2-red-flow-reverse-horizontal-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M5 8 H15 M22 18 H33 M8 30 H19" className="newbuild2-pattern-line red" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`${flowLineTravel} 0`}
+              to="0 0"
+              dur={flowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
+          <pattern id="newbuild2-green-flow-vertical-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M7 6 H18 M24 17 H34 M4 29 H15" className="newbuild2-pattern-line green" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`0 -${flowLineTravel}`}
+              to="0 0"
+              dur={flowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
+          <pattern id="newbuild2-green-flow-horizontal-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M7 6 H18 M24 17 H34 M4 29 H15" className="newbuild2-pattern-line green" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`${flowLineTravel} 0`}
+              to="0 0"
+              dur={flowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
+          <pattern id="newbuild2-green-flow-right-horizontal-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M7 6 H18 M24 17 H34 M4 29 H15" className="newbuild2-pattern-line green" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`-${flowLineTravel} 0`}
+              to="0 0"
+              dur={flowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
+          {airInSystemMode && airBleedActive ? (
+            <clipPath id="newbuild2-air-green-clip" clipPathUnits="userSpaceOnUse">
+              <rect
+                x={airChamber.leftX}
+                y={airChamber.topY}
+                width={airGreenWidth}
+                height={airChamber.height}
+              />
+            </clipPath>
+          ) : null}
         </defs>
 
         <rect width="1500" height="1080" className="diagram-background" />
@@ -159,15 +478,232 @@ export function NewBuild2HydraulicDiagram({
         />
 
         <g
-          className={autoMode ? 'newbuild2-flow-overlay active' : 'newbuild2-flow-overlay'}
+          className={motionVisualActive ? 'newbuild2-flow-overlay active' : 'newbuild2-flow-overlay'}
           transform={artworkExactTransform}
         >
-          {ANIMATED_GREEN_FLOW_SHAPES.map((shape) => (
-            <path key={shape} className="newbuild2-flow-shape green" d={shape} />
+          {ANIMATED_GREEN_VERTICAL_FLOW_SHAPES.map((shape) => (
+            <path key={shape} className="newbuild2-flow-shape green vertical" d={shape} />
           ))}
-          {ANIMATED_RED_FLOW_SHAPES.map((shape) => (
-            <path key={shape} className="newbuild2-flow-shape red" d={shape} />
+          {ANIMATED_GREEN_HORIZONTAL_FLOW_SHAPES.map((shape) => (
+            <path key={shape} className="newbuild2-flow-shape green horizontal" d={shape} />
           ))}
+          {ANIMATED_GREEN_RIGHT_HORIZONTAL_FLOW_SHAPES.map((shape) => (
+            <path key={shape} className="newbuild2-flow-shape green right-horizontal" d={shape} />
+          ))}
+          {ANIMATED_RED_VERTICAL_FLOW_SHAPES.map((shape) => (
+            <path key={shape} className="newbuild2-flow-shape red vertical" d={shape} />
+          ))}
+          {ANIMATED_RED_HORIZONTAL_FLOW_SHAPES.map((shape) => (
+            <path key={shape} className="newbuild2-flow-shape red horizontal" d={shape} />
+          ))}
+          {PARTIAL_RED_HORIZONTAL_FLOW_SHAPES.map((shape) => (
+            <path key={shape} className="newbuild2-flow-shape red horizontal" d={shape} />
+          ))}
+          {ANIMATED_RED_REVERSE_HORIZONTAL_FLOW_SHAPES.map((shape) => (
+            <path key={shape} className="newbuild2-flow-shape red reverse-horizontal" d={shape} />
+          ))}
+        </g>
+
+        {resOverfillMode && autoMode && resOverfillAutoStage === 'auto' ? (
+          <g className="newbuild2-res-bubbles" transform={artworkExactTransform} aria-hidden="true">
+            <g className="res-bubble-stream">
+              {[
+                { x: 879, delay: '0s', radius: 5.2 },
+                { x: 861, delay: '0.32s', radius: 4.5 },
+                { x: 893, delay: '0.66s', radius: 3.8 },
+                { x: 873, delay: '0.94s', radius: 4.2 },
+                { x: 886, delay: '1.24s', radius: 3.4 },
+              ].map((bubble) => (
+                <circle key={`${bubble.x}-${bubble.delay}`} cx={bubble.x} cy="970" r={bubble.radius}>
+                  <animate
+                    attributeName="cy"
+                    values="970;1088"
+                    dur="1.55s"
+                    begin={bubble.delay}
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values="0;0.9;0.85;0"
+                    keyTimes="0;0.16;0.78;1"
+                    dur="1.55s"
+                    begin={bubble.delay}
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              ))}
+            </g>
+          </g>
+        ) : null}
+
+        {airInSystemMode && airBleedActive ? (
+          <g className="newbuild2-air-in-system" transform={artworkExactTransform} aria-hidden="true">
+            <rect
+              className="air-chamber-cover"
+              x={airChamber.leftX}
+              y={airChamber.topY}
+              width={airChamber.rightX - airChamber.leftX}
+              height={airChamber.height}
+            />
+            <path className="air-chamber-green" d={airChamber.greenPath} clipPath="url(#newbuild2-air-green-clip)" />
+            <rect
+              className="air-chamber-red air-chamber-red-base"
+              x={airChamber.redBaseX}
+              y={airChamber.topY}
+              width={airChamber.redBaseWidth}
+              height={airChamber.height}
+            />
+            <rect
+              className="air-chamber-red air-chamber-red-expansion"
+              x={airRedExpansionX}
+              y={airChamber.topY}
+              width={airTravel}
+              height={airChamber.height}
+            />
+            <rect
+              className="air-right-green-cover"
+              x={airChamber.rightUpperGreen.x + airChamber.rightUpperGreen.width - airRightGreenCoverWidth}
+              y={airChamber.rightUpperGreen.y}
+              width={airRightGreenCoverWidth}
+              height={airChamber.rightUpperGreen.height}
+            />
+            <rect
+              className="air-right-green-cover"
+              x={airChamber.rightLowerGreen.x + airChamber.rightLowerGreen.width - airRightGreenCoverWidth}
+              y={airChamber.rightLowerGreen.y}
+              width={airRightGreenCoverWidth}
+              height={airChamber.rightLowerGreen.height}
+            />
+            <image
+              className="air-moving-element"
+              href="/assets/moving-element.svg"
+              x={airMovingX}
+              y={airChamber.movingY}
+              width={airChamber.movingWidth}
+              height={airChamber.movingHeight}
+              preserveAspectRatio="none"
+            />
+          </g>
+        ) : null}
+
+        {airInSystemMode && airBleedActive ? (
+          <g className="newbuild2-bleed-bubbles" transform={artworkExactTransform} aria-hidden="true">
+            {bleedRainActive ? (
+              <g className="bleed-bubble-stream">
+                {[
+                  { x: 1558, delay: '0s', radius: 4.6 },
+                  { x: 1572, delay: '0.24s', radius: 3.8 },
+                  { x: 1562, delay: '0.48s', radius: 4.1 },
+                  { x: 1577, delay: '0.72s', radius: 3.3 },
+                  { x: 1566, delay: '0.96s', radius: 3.7 },
+                  { x: 1574, delay: '1.2s', radius: 3.1 },
+                ].map((bubble) => (
+                  <circle key={`bleed-${bubble.x}-${bubble.delay}`} cx={bubble.x} cy="204" r={bubble.radius}>
+                    <animate
+                      attributeName="cy"
+                      values="204;454"
+                      dur="1.55s"
+                      begin={bubble.delay}
+                      repeatCount="indefinite"
+                    />
+                    <animate
+                      attributeName="opacity"
+                      values="0;0.9;0.86;0"
+                      keyTimes="0;0.14;0.82;1"
+                      dur="1.55s"
+                      begin={bubble.delay}
+                      repeatCount="indefinite"
+                    />
+                  </circle>
+                ))}
+              </g>
+            ) : null}
+            <g className="bleed-bubble-puddle">
+              <ellipse cx="1564" cy="486" rx="66" ry="30" />
+              <ellipse cx="1517" cy="471" rx="42" ry="28" />
+              <ellipse cx="1541" cy="501" rx="58" ry="27" />
+              <ellipse cx="1607" cy="499" rx="54" ry="28" />
+              <ellipse cx="1602" cy="466" rx="45" ry="25" />
+            </g>
+          </g>
+        ) : null}
+
+        <g
+          className="newbuild2-pump-cycle"
+          transform={artworkExactTransform}
+          style={{ '--pump-cycle-duration': pumpDuration }}
+          aria-hidden="true"
+        >
+          <g className="pump-cycle-slug pump-cycle-red">
+            {pumpFailureMode ? null : (
+              <animateTransform
+                attributeName="transform"
+                type="translate"
+                values={`0 0; ${redToCenter} 0; ${redToRight} 0; ${redToCenter} 0; 0 0`}
+                keyTimes="0;0.25;0.5;0.75;1"
+                calcMode="spline"
+                keySplines="0.42 0 0.58 1; 0.42 0 0.58 1; 0.42 0 0.58 1; 0.42 0 0.58 1"
+                dur={pumpDuration}
+                repeatCount="indefinite"
+              />
+            )}
+            <image
+              href="/assets/left-red.svg"
+              x={pumpOverlay.leftX}
+              y={pumpOverlay.slugY}
+              width={pumpOverlay.slugWidth}
+              height={pumpOverlay.slugHeight}
+              preserveAspectRatio="none"
+            />
+          </g>
+          <g className="pump-cycle-slug pump-cycle-green">
+            {pumpFailureMode ? null : (
+              <animateTransform
+                attributeName="transform"
+                type="translate"
+                values={`0 0; ${greenToCenter} 0; ${greenToLeft} 0; ${greenToCenter} 0; 0 0`}
+                keyTimes="0;0.25;0.5;0.75;1"
+                calcMode="spline"
+                keySplines="0.42 0 0.58 1; 0.42 0 0.58 1; 0.42 0 0.58 1; 0.42 0 0.58 1"
+                dur={pumpDuration}
+                repeatCount="indefinite"
+              />
+            )}
+            <image
+              href="/assets/right-green.svg"
+              x={pumpOverlay.rightX}
+              y={pumpOverlay.slugY}
+              width={pumpOverlay.slugWidth}
+              height={pumpOverlay.slugHeight}
+              preserveAspectRatio="none"
+            />
+          </g>
+          <g
+            className={motionVisualActive || pumpFailureMode ? 'pump-cycle-holder-wrap auto' : 'pump-cycle-holder-wrap'}
+            transform={pumpFailureMode ? `rotate(10 ${pumpHolderCenter.x} ${pumpHolderCenter.y})` : undefined}
+          >
+            {motionVisualActive ? (
+              <animateTransform
+                attributeName="transform"
+                type="rotate"
+                values={`0 ${pumpHolderCenter.x} ${pumpHolderCenter.y}; -10 ${pumpHolderCenter.x} ${pumpHolderCenter.y}; 0 ${pumpHolderCenter.x} ${pumpHolderCenter.y}; 10 ${pumpHolderCenter.x} ${pumpHolderCenter.y}; 0 ${pumpHolderCenter.x} ${pumpHolderCenter.y}`}
+                keyTimes="0;0.25;0.5;0.75;1"
+                calcMode="spline"
+                keySplines="0.42 0 0.58 1; 0.42 0 0.58 1; 0.42 0 0.58 1; 0.42 0 0.58 1"
+                dur={autoCycleDuration}
+                repeatCount="indefinite"
+              />
+            ) : null}
+            <image
+              className="pump-cycle-holder"
+              href="/assets/red-green-holder.svg"
+              x={pumpOverlay.holderX}
+              y={pumpOverlay.holderY}
+              width={pumpOverlay.holderWidth}
+              height={pumpOverlay.holderHeight}
+              preserveAspectRatio="none"
+            />
+          </g>
         </g>
 
         <g className="legend">
@@ -188,6 +724,11 @@ export function NewBuild2HydraulicDiagram({
         </g>
 
         <g className="labels newbuild2-labels">
+          {motionVisualActive ? (
+            <text className="newbuild2-pressure-readout" x="485" y="88">
+              {autoPressureValue.toFixed(1)}
+            </text>
+          ) : null}
           <text x="420" y="116">PRESSURE OUT</text>
           <text x="820" y="126">RETURN IN</text>
           <text className="label-left" x="250" y="306">PRESSURE SWITCH</text>
@@ -200,22 +741,177 @@ export function NewBuild2HydraulicDiagram({
           <text x="970" y="156">SIGHT GLASS</text>
           <text x="1268" y="250">BLEED VALVE</text>
           <text x="1224" y="556">LEVEL INDICATOR</text>
+          {testMode || pumpFailureMode ? (
+            <g className="newbuild2-test-alert" aria-label="Hydraulic pressure alert">
+              <rect x="16" y="318" width="176" height="31" />
+              <text x="26" y="342">HYD PRESS</text>
+            </g>
+          ) : null}
+        </g>
+
+        {airInSystemMode ? (
+          <g
+            className={airBleedActive ? 'newbuild2-bleed-trigger active' : 'newbuild2-bleed-trigger'}
+            role="button"
+            tabIndex="0"
+            aria-label="Activate bleed valve air purge"
+            aria-pressed={bleedRainActive}
+            onClick={activateAirBleed}
+            onKeyDown={(event) => handleTrainingButtonKeyDown(event, activateAirBleed)}
+          >
+            <rect className="bleed-trigger-hitbox" x="1162" y="220" width="106" height="58" />
+            <path className="bleed-trigger-simple-arrow" d="M1257 250H1219M1219 250L1231 240M1219 250L1231 260" />
+          </g>
+        ) : null}
+
+        <g className="newbuild2-training-menu" aria-label="Training control menu">
+          <rect
+            className="training-menu-shell"
+            x={trainingMenu.x}
+            y={trainingMenu.y}
+            width={trainingMenu.width}
+            height={TRAINING_MENU_ITEMS.length * trainingMenu.rowHeight}
+          />
+          {TRAINING_MENU_ITEMS.map((item, index) => {
+            const rowY = trainingMenu.y + index * trainingMenu.rowHeight;
+
+            if (item === 'ABNORMAL') {
+              return (
+                <g
+                  key={item}
+                  className={
+                    abnormalMenuOpen
+                      ? 'training-menu-row training-menu-button training-menu-abnormal open'
+                      : 'training-menu-row training-menu-button training-menu-abnormal'
+                  }
+                  role="button"
+                  tabIndex="0"
+                  aria-label="Abnormal menu"
+                  aria-pressed={activeTrainingButton === item}
+                  onPointerEnter={() => setAbnormalMenuOpen(true)}
+                  onPointerLeave={() => setAbnormalMenuOpen(false)}
+                  onClick={() => {
+                    activateTrainingButton(item);
+                    setAbnormalMenuOpen(true);
+                  }}
+                  onKeyDown={(event) => handleTrainingButtonKeyDown(event, () => {
+                    activateTrainingButton(item);
+                    setAbnormalMenuOpen(true);
+                  })}
+                  onFocus={() => setAbnormalMenuOpen(true)}
+                  onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                      setAbnormalMenuOpen(false);
+                    }
+                  }}
+                >
+                  <rect
+                    className="training-menu-cell menu-row-highlight"
+                    x={trainingMenu.x}
+                    y={rowY}
+                    width={trainingMenu.width}
+                    height={trainingMenu.rowHeight}
+                  />
+                  <text x={trainingMenu.x + trainingMenu.width / 2} y={rowY + 26}>{item}</text>
+                  <text className="training-menu-arrow" x={trainingMenu.x + trainingMenu.width - 28} y={rowY + 26}>
+                    &gt;
+                  </text>
+                  <g
+                    className="training-submenu"
+                    transform={`translate(${abnormalMenu.x} ${rowY})`}
+                    aria-label="Abnormal submenu"
+                  >
+                    <rect
+                      className="training-menu-shell"
+                      x="0"
+                      y="0"
+                      width={abnormalMenu.width}
+                      height={ABNORMAL_MENU_ITEMS.length * trainingMenu.rowHeight}
+                    />
+                    {ABNORMAL_MENU_ITEMS.map((submenuItem, submenuIndex) => (
+                      <g
+                        key={submenuItem}
+                        className={
+                          activeAbnormalButton === submenuItem
+                            ? 'training-menu-row training-menu-button training-submenu-button active'
+                            : 'training-menu-row training-menu-button training-submenu-button'
+                        }
+                        role="button"
+                        tabIndex="0"
+                        aria-label={submenuItem}
+                        aria-pressed={activeAbnormalButton === submenuItem}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          activateAbnormalButton(submenuItem);
+                        }}
+                        onKeyDown={(event) => handleTrainingButtonKeyDown(event, () => activateAbnormalButton(submenuItem))}
+                      >
+                        <rect
+                          className="training-menu-cell"
+                          x="0"
+                          y={submenuIndex * trainingMenu.rowHeight}
+                          width={abnormalMenu.width}
+                          height={trainingMenu.rowHeight}
+                        />
+                        <rect
+                          className="training-menu-checkbox"
+                          x="22"
+                          y={submenuIndex * trainingMenu.rowHeight + 10}
+                          width="14"
+                          height="14"
+                        />
+                        <text x="48" y={submenuIndex * trainingMenu.rowHeight + 26}>{submenuItem}</text>
+                      </g>
+                    ))}
+                  </g>
+                </g>
+              );
+            }
+
+            return (
+              <g
+                key={item}
+                className={
+                  activeTrainingButton === item
+                    ? 'training-menu-row training-menu-button active'
+                    : 'training-menu-row training-menu-button'
+                }
+                role="button"
+                tabIndex="0"
+                aria-label={item}
+                aria-pressed={activeTrainingButton === item}
+                onClick={() => activateTrainingButton(item)}
+                onKeyDown={(event) => handleTrainingButtonKeyDown(event, () => activateTrainingButton(item))}
+              >
+                <rect
+                  className="training-menu-cell"
+                  x={trainingMenu.x}
+                  y={rowY}
+                  width={trainingMenu.width}
+                  height={trainingMenu.rowHeight}
+                />
+                <text x={trainingMenu.x + trainingMenu.width / 2} y={rowY + 26}>{item}</text>
+              </g>
+            );
+          })}
         </g>
 
         <g className="newbuild2-pressure-clock" transform={`translate(${gaugeCenter.x} ${gaugeCenter.y})`} aria-label="Pressure out">
-          {autoMode ? (
+          {motionVisualActive ? (
             <g className="newbuild2-pressure-needle-auto">
               <animateTransform
                 attributeName="transform"
                 type="rotate"
-                values="-72 0 0;72 0 0;-72 0 0"
-                dur="1.45s"
+                values="-90 0 0;90 0 0;-90 0 0"
+                calcMode="spline"
+                keySplines="0.42 0 0.58 1; 0.42 0 0.58 1"
+                dur={autoCycleDuration}
                 repeatCount="indefinite"
               />
               <line className="newbuild2-pressure-needle" x1="0" y1="5" x2="0" y2="-30" />
             </g>
           ) : (
-            <line className="newbuild2-pressure-needle" x1="0" y1="5" x2="0" y2="-30" transform={`rotate(${pressureNeedleAngle})`} />
+            <line className="newbuild2-pressure-needle" x1="0" y1="5" x2="0" y2="-30" transform={`rotate(${displayedPressureNeedleAngle})`} />
           )}
           <circle className="newbuild2-pressure-hub" cx="0" cy="0" r="5.5" />
         </g>

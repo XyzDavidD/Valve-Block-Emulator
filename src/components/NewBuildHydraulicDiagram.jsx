@@ -67,7 +67,7 @@ export function NewBuildHydraulicDiagram({
   const sy = (value) => sourceOffset.y + value * sourceScale;
   const redTubePaths = [
     `M ${sx(286)} ${sy(252)} H ${sx(390)} V ${sy(222)} H ${sx(570)} V ${sy(174)} H ${sx(628)} V ${sy(350)}`,
-    `M ${sx(628)} ${sy(314)} H ${sx(894)} V ${sy(372)} H ${sx(996)}`,
+    `M ${sx(628)} ${sy(314)} H ${sx(894)} V ${sy(420)} H ${sx(996)}`,
     `M ${sx(304)} ${sy(560)} H ${sx(448)} V ${sy(420)} H ${sx(905)} V ${sy(520)} H ${sx(945)}`,
     `M ${sx(170)} ${sy(816)} H ${sx(322)} V ${sy(776)} H ${sx(468)} V ${sy(850)} H ${sx(570)} V ${sy(900)}`,
     `M ${sx(555)} ${sy(420)} V ${sy(650)} H ${sx(905)} V ${sy(600)} H ${sx(945)}`,
