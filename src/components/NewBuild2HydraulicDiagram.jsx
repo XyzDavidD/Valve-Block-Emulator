@@ -7,7 +7,11 @@ const stickHalfRange = 25;
 const autoCycleSeconds = (Math.PI * 2) / 0.82;
 const autoCycleDuration = `${autoCycleSeconds.toFixed(2)}s`;
 const flowLineDuration = '1.38s';
+const pumpRunawayFlowLineDuration = '0.32s';
 const flowLineTravel = 36;
+const defaultPressureReadout = 103.0;
+const pumpRunawayPressure = 122.0;
+const pumpRunawayNeedleAngle = 45;
 const artworkBox = { x: 245, y: 150, width: 1080, height: 717 };
 const artworkSource = { x: 0, y: 42, width: 1500, height: 996 };
 
@@ -87,6 +91,12 @@ const ANIMATED_RED_FLOW_SHAPES = RED_FLOW_SHAPES.filter(
 const PARTIAL_RED_HORIZONTAL_FLOW_SHAPES = [
   'M634.666 394.49H410.943V371.776H634.666V394.49Z',
 ];
+const PUMP_RUNAWAY_RED_HORIZONTAL_FLOW_SHAPES = [
+  RED_FLOW_SHAPES[12],
+];
+const PUMP_RUNAWAY_RED_DOWN_FLOW_SHAPES = [
+  'M958.106 460.797H937.756V394.49H958.106V460.797Z',
+];
 
 const GREEN_HORIZONTAL_FLOW_INDEXES = new Set([9, 11, 15, 16, 20, 25, 27]);
 const GREEN_RIGHT_HORIZONTAL_FLOW_INDEXES = new Set([19]);
@@ -109,6 +119,31 @@ const ANIMATED_GREEN_VERTICAL_FLOW_SHAPES = GREEN_FLOW_SHAPES.filter(
   ),
 );
 
+const PUMP_RUNAWAY_GREEN_VERTICAL_FLOW_SHAPES = ANIMATED_GREEN_VERTICAL_FLOW_SHAPES.filter(
+  (shape) => ![
+    GREEN_FLOW_SHAPES[8],
+    GREEN_FLOW_SHAPES[13],
+    GREEN_FLOW_SHAPES[14],
+    GREEN_FLOW_SHAPES[17],
+    GREEN_FLOW_SHAPES[18],
+    GREEN_FLOW_SHAPES[21],
+    GREEN_FLOW_SHAPES[22],
+  ].includes(shape),
+);
+const PUMP_RUNAWAY_GREEN_EXTRA_VERTICAL_FLOW_SHAPES = [
+  'M504.223 719.008H479.875V542.225H504.223V719.008Z',
+];
+
+const PUMP_RUNAWAY_GREEN_HORIZONTAL_FLOW_SHAPES = ANIMATED_GREEN_HORIZONTAL_FLOW_SHAPES.filter(
+  (shape) => ![GREEN_FLOW_SHAPES[16], GREEN_FLOW_SHAPES[20]].includes(shape),
+);
+const PUMP_RUNAWAY_GREEN_EXTRA_HORIZONTAL_FLOW_SHAPES = [
+  'M566.184 522.225H504.223V502.238H566.184V522.225Z',
+];
+const PUMP_RUNAWAY_GREEN_RIGHT_HORIZONTAL_FLOW_SHAPES = [
+  'M479.875 696.84H619.785V719.008H479.875V696.84Z',
+];
+
 const ANIMATED_RED_HORIZONTAL_FLOW_SHAPES = RED_FLOW_SHAPES.filter(
   (_, index) => ANIMATED_RED_FLOW_SHAPES.includes(RED_FLOW_SHAPES[index]) && RED_HORIZONTAL_FLOW_INDEXES.has(index),
 );
@@ -123,6 +158,10 @@ const ANIMATED_RED_VERTICAL_FLOW_SHAPES = RED_FLOW_SHAPES.filter(
     && !RED_HORIZONTAL_FLOW_INDEXES.has(index)
     && !RED_REVERSE_HORIZONTAL_FLOW_INDEXES.has(index)
   ),
+);
+
+const PUMP_RUNAWAY_RED_VERTICAL_FLOW_SHAPES = ANIMATED_RED_VERTICAL_FLOW_SHAPES.filter(
+  (shape) => ![RED_FLOW_SHAPES[2], RED_FLOW_SHAPES[11], RED_FLOW_SHAPES[13]].includes(shape),
 );
 
 const TRAINING_MENU_ITEMS = ['FREEZE', 'CLICKPOINTS', 'TEST', 'ABNORMAL', 'RESET', 'QUIT'];
@@ -156,6 +195,8 @@ const pumpHolderCenter = {
 };
 const airInSystemDelayMs = 2000;
 const airInSystemDurationMs = 10000;
+const pumpRunawayDelayMs = 2000;
+const pumpRunawayMotionDurationMs = 18000;
 const airChamber = {
   leftX: 553.828,
   redBaseX: 783.361,
@@ -175,6 +216,20 @@ airChamber.greenWidth = airChamber.redBaseX - airChamber.leftX;
 airChamber.redBaseWidth = airChamber.rightX - airChamber.redBaseX;
 airChamber.travel = airChamber.greenWidth * 0.35;
 airChamber.rightGreenTravel = airChamber.rightUpperGreen.width * 0.35;
+const runwayChamber = {
+  ...airChamber,
+  movingStartX: airChamber.movingStartX,
+  movingY: 454.8,
+  movingWidth: 395,
+  movingHeight: 218,
+  travel: airChamber.greenWidth * 0.25,
+};
+const runwayThingFlow = {
+  x: 151,
+  y: 100,
+  width: 92,
+  height: 16,
+};
 
 export function NewBuild2HydraulicDiagram({
   pressure,
@@ -198,17 +253,25 @@ export function NewBuild2HydraulicDiagram({
   const [airBleedActive, setAirBleedActive] = useState(false);
   const [bleedRainActive, setBleedRainActive] = useState(false);
   const [airProgress, setAirProgress] = useState(0);
+  const [runwayProgress, setRunwayProgress] = useState(0);
   const airProgressRef = useRef(0);
+  const pumpRunawayMode = activeAbnormalButton === 'PUMP RUNAWAY';
   const pumpFailureMode = activeAbnormalButton === 'PUMP FAILURE';
   const resOverfillMode = activeAbnormalButton === 'RES OVERFILL';
   const airInSystemMode = activeAbnormalButton === 'AIR IN SYSTEM';
-  const motionVisualActive = (autoMode || draggingStick) && !pumpFailureMode && !airInSystemMode;
+  const motionVisualActive = (pumpRunawayMode || autoMode || draggingStick) && !pumpFailureMode && !airInSystemMode;
   const testMode = activeTrainingButton === 'TEST';
   const stickAngle = clamp(stickCenterAngle + stickPosition * stickHalfRange, -73, -23);
   const pressureNeedleAngle = clamp(-118 + ((pressure - 70) / 60) * 236, -118, 118);
-  const displayedPressureNeedleAngle = pumpFailureMode ? 12 : pressureNeedleAngle;
+  const displayedPressureNeedleAngle = pumpFailureMode ? 12 : (pumpRunawayMode ? pumpRunawayNeedleAngle : pressureNeedleAngle);
+  const defaultMode = !activeAbnormalButton && !testMode;
+  const showPressureReadout = motionVisualActive || defaultMode;
+  const pressureReadoutValue = pumpRunawayMode
+    ? pumpRunawayPressure
+    : (motionVisualActive ? autoPressureValue : defaultPressureReadout);
   const valveBlockHref = (() => {
     if (pumpFailureMode) return '/assets/valve-block-failure.svg';
+    if (pumpRunawayMode) return '/assets/valve-block-runway.svg';
     if (resOverfillMode) {
       if (resOverfillAutoStage === 'auto') return '/assets/valve-auto1.svg';
       if (resOverfillAutoStage === 'auto2') return '/assets/valve-auto2.svg';
@@ -229,6 +292,10 @@ export function NewBuild2HydraulicDiagram({
   const airRedExpansionX = airChamber.redBaseX - airTravel;
   const airMovingX = airChamber.movingStartX - airTravel;
   const airRightGreenCoverWidth = airChamber.rightGreenTravel * airProgress;
+  const runwayTravel = runwayChamber.travel * runwayProgress;
+  const runwayGreenWidth = runwayChamber.greenWidth - runwayTravel;
+  const runwayRedExpansionX = runwayChamber.redBaseX - runwayTravel;
+  const runwayMovingX = runwayChamber.movingStartX - runwayTravel;
 
   useEffect(() => {
     if (!motionVisualActive) {
@@ -307,6 +374,38 @@ export function NewBuild2HydraulicDiagram({
       if (frameId) cancelAnimationFrame(frameId);
     };
   }, [airBleedActive, airInSystemMode, bleedRainActive]);
+
+  useEffect(() => {
+    if (!pumpRunawayMode) {
+      setRunwayProgress(0);
+      return undefined;
+    }
+
+    let frameId;
+    let startTime;
+
+    setRunwayProgress(0);
+
+    const timer = setTimeout(() => {
+      const tickRunway = (now) => {
+        startTime ??= now;
+        const elapsed = now - startTime;
+        const progress = clamp(elapsed / pumpRunawayMotionDurationMs, 0, 1);
+        setRunwayProgress(progress);
+
+        if (progress < 1) {
+          frameId = requestAnimationFrame(tickRunway);
+        }
+      };
+
+      frameId = requestAnimationFrame(tickRunway);
+    }, pumpRunawayDelayMs);
+
+    return () => {
+      clearTimeout(timer);
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [pumpRunawayMode]);
 
   const setStickFromPointer = useCallback(
     (event) => {
@@ -394,6 +493,30 @@ export function NewBuild2HydraulicDiagram({
               repeatCount="indefinite"
             />
           </pattern>
+          <pattern id="newbuild2-red-flow-vertical-fast-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M5 8 H15 M22 18 H33 M8 30 H19" className="newbuild2-pattern-line red" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`0 ${flowLineTravel}`}
+              to="0 0"
+              dur={pumpRunawayFlowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
+          <pattern id="newbuild2-red-flow-down-fast-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M5 8 H15 M22 18 H33 M8 30 H19" className="newbuild2-pattern-line red" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`0 -${flowLineTravel}`}
+              to="0 0"
+              dur={pumpRunawayFlowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
           <pattern id="newbuild2-red-flow-horizontal-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
             <path d="M5 8 H15 M22 18 H33 M8 30 H19" className="newbuild2-pattern-line red" />
             <animateTransform
@@ -402,6 +525,18 @@ export function NewBuild2HydraulicDiagram({
               from={`-${flowLineTravel} 0`}
               to="0 0"
               dur={flowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
+          <pattern id="newbuild2-red-flow-horizontal-fast-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M5 8 H15 M22 18 H33 M8 30 H19" className="newbuild2-pattern-line red" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`-${flowLineTravel} 0`}
+              to="0 0"
+              dur={pumpRunawayFlowLineDuration}
               calcMode="linear"
               repeatCount="indefinite"
             />
@@ -418,6 +553,18 @@ export function NewBuild2HydraulicDiagram({
               repeatCount="indefinite"
             />
           </pattern>
+          <pattern id="newbuild2-red-flow-reverse-horizontal-fast-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M5 8 H15 M22 18 H33 M8 30 H19" className="newbuild2-pattern-line red" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`${flowLineTravel} 0`}
+              to="0 0"
+              dur={pumpRunawayFlowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
           <pattern id="newbuild2-green-flow-vertical-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
             <path d="M7 6 H18 M24 17 H34 M4 29 H15" className="newbuild2-pattern-line green" />
             <animateTransform
@@ -426,6 +573,18 @@ export function NewBuild2HydraulicDiagram({
               from={`0 -${flowLineTravel}`}
               to="0 0"
               dur={flowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
+          <pattern id="newbuild2-green-flow-vertical-fast-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M7 6 H18 M24 17 H34 M4 29 H15" className="newbuild2-pattern-line green" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`0 -${flowLineTravel}`}
+              to="0 0"
+              dur={pumpRunawayFlowLineDuration}
               calcMode="linear"
               repeatCount="indefinite"
             />
@@ -442,6 +601,18 @@ export function NewBuild2HydraulicDiagram({
               repeatCount="indefinite"
             />
           </pattern>
+          <pattern id="newbuild2-green-flow-horizontal-fast-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M7 6 H18 M24 17 H34 M4 29 H15" className="newbuild2-pattern-line green" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`${flowLineTravel} 0`}
+              to="0 0"
+              dur={pumpRunawayFlowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
           <pattern id="newbuild2-green-flow-right-horizontal-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
             <path d="M7 6 H18 M24 17 H34 M4 29 H15" className="newbuild2-pattern-line green" />
             <animateTransform
@@ -454,6 +625,18 @@ export function NewBuild2HydraulicDiagram({
               repeatCount="indefinite"
             />
           </pattern>
+          <pattern id="newbuild2-green-flow-right-horizontal-fast-pattern" width={flowLineTravel} height={flowLineTravel} patternUnits="userSpaceOnUse">
+            <path d="M7 6 H18 M24 17 H34 M4 29 H15" className="newbuild2-pattern-line green" />
+            <animateTransform
+              attributeName="patternTransform"
+              type="translate"
+              from={`-${flowLineTravel} 0`}
+              to="0 0"
+              dur={pumpRunawayFlowLineDuration}
+              calcMode="linear"
+              repeatCount="indefinite"
+            />
+          </pattern>
           {airInSystemMode && airBleedActive ? (
             <clipPath id="newbuild2-air-green-clip" clipPathUnits="userSpaceOnUse">
               <rect
@@ -461,6 +644,16 @@ export function NewBuild2HydraulicDiagram({
                 y={airChamber.topY}
                 width={airGreenWidth}
                 height={airChamber.height}
+              />
+            </clipPath>
+          ) : null}
+          {pumpRunawayMode ? (
+            <clipPath id="newbuild2-runway-green-clip" clipPathUnits="userSpaceOnUse">
+              <rect
+                x={runwayChamber.leftX}
+                y={runwayChamber.topY}
+                width={runwayGreenWidth}
+                height={runwayChamber.height}
               />
             </clipPath>
           ) : null}
@@ -477,29 +670,90 @@ export function NewBuild2HydraulicDiagram({
           preserveAspectRatio="none"
         />
 
+        {pumpRunawayMode ? (
+          <g className="newbuild2-runway-motion" transform={artworkExactTransform} aria-hidden="true">
+            <rect
+              className="runway-chamber-cover"
+              x={runwayChamber.leftX}
+              y={runwayChamber.topY}
+              width={runwayChamber.rightX - runwayChamber.leftX}
+              height={runwayChamber.height}
+            />
+            <path className="runway-chamber-green" d={runwayChamber.greenPath} clipPath="url(#newbuild2-runway-green-clip)" />
+            <rect
+              className="runway-chamber-red runway-chamber-red-base"
+              x={runwayChamber.redBaseX}
+              y={runwayChamber.topY}
+              width={runwayChamber.redBaseWidth}
+              height={runwayChamber.height}
+            />
+            <rect
+              className="runway-chamber-red runway-chamber-red-expansion"
+              x={runwayRedExpansionX}
+              y={runwayChamber.topY}
+              width={runwayTravel}
+              height={runwayChamber.height}
+            />
+            <image
+              className="runway-moving-element"
+              href="/assets/runway-thing.svg"
+              x={runwayMovingX}
+              y={runwayChamber.movingY}
+              width={runwayChamber.movingWidth}
+              height={runwayChamber.movingHeight}
+              preserveAspectRatio="none"
+            />
+            <rect
+              className="runway-thing-red-flow"
+              x={runwayMovingX + runwayThingFlow.x}
+              y={runwayChamber.movingY + runwayThingFlow.y}
+              width={runwayThingFlow.width}
+              height={runwayThingFlow.height}
+            />
+          </g>
+        ) : null}
+
         <g
-          className={motionVisualActive ? 'newbuild2-flow-overlay active' : 'newbuild2-flow-overlay'}
+          className={
+            motionVisualActive
+              ? `newbuild2-flow-overlay active${pumpRunawayMode ? ' pump-runaway' : ''}`
+              : 'newbuild2-flow-overlay'
+          }
           transform={artworkExactTransform}
         >
-          {ANIMATED_GREEN_VERTICAL_FLOW_SHAPES.map((shape) => (
+          {[
+            ...(pumpRunawayMode ? PUMP_RUNAWAY_GREEN_VERTICAL_FLOW_SHAPES : ANIMATED_GREEN_VERTICAL_FLOW_SHAPES),
+            ...(pumpRunawayMode ? PUMP_RUNAWAY_GREEN_EXTRA_VERTICAL_FLOW_SHAPES : []),
+          ].map((shape) => (
             <path key={shape} className="newbuild2-flow-shape green vertical" d={shape} />
           ))}
-          {ANIMATED_GREEN_HORIZONTAL_FLOW_SHAPES.map((shape) => (
+          {[
+            ...(pumpRunawayMode ? PUMP_RUNAWAY_GREEN_HORIZONTAL_FLOW_SHAPES : ANIMATED_GREEN_HORIZONTAL_FLOW_SHAPES),
+            ...(pumpRunawayMode ? PUMP_RUNAWAY_GREEN_EXTRA_HORIZONTAL_FLOW_SHAPES : []),
+          ].map((shape) => (
             <path key={shape} className="newbuild2-flow-shape green horizontal" d={shape} />
           ))}
-          {ANIMATED_GREEN_RIGHT_HORIZONTAL_FLOW_SHAPES.map((shape) => (
+          {(pumpRunawayMode ? PUMP_RUNAWAY_GREEN_RIGHT_HORIZONTAL_FLOW_SHAPES : ANIMATED_GREEN_RIGHT_HORIZONTAL_FLOW_SHAPES).map((shape) => (
             <path key={shape} className="newbuild2-flow-shape green right-horizontal" d={shape} />
           ))}
-          {ANIMATED_RED_VERTICAL_FLOW_SHAPES.map((shape) => (
+          {(pumpRunawayMode ? PUMP_RUNAWAY_RED_VERTICAL_FLOW_SHAPES : ANIMATED_RED_VERTICAL_FLOW_SHAPES).map((shape) => (
             <path key={shape} className="newbuild2-flow-shape red vertical" d={shape} />
           ))}
-          {ANIMATED_RED_HORIZONTAL_FLOW_SHAPES.map((shape) => (
+          {[
+            ...ANIMATED_RED_HORIZONTAL_FLOW_SHAPES,
+            ...(pumpRunawayMode ? PUMP_RUNAWAY_RED_HORIZONTAL_FLOW_SHAPES : []),
+          ].map((shape) => (
             <path key={shape} className="newbuild2-flow-shape red horizontal" d={shape} />
           ))}
-          {PARTIAL_RED_HORIZONTAL_FLOW_SHAPES.map((shape) => (
+          {(pumpRunawayMode ? [] : PARTIAL_RED_HORIZONTAL_FLOW_SHAPES).map((shape) => (
             <path key={shape} className="newbuild2-flow-shape red horizontal" d={shape} />
           ))}
-          {ANIMATED_RED_REVERSE_HORIZONTAL_FLOW_SHAPES.map((shape) => (
+          {(pumpRunawayMode ? PUMP_RUNAWAY_RED_DOWN_FLOW_SHAPES : []).map((shape) => (
+            <path key={shape} className="newbuild2-flow-shape red down" d={shape} />
+          ))}
+          {[
+            ...ANIMATED_RED_REVERSE_HORIZONTAL_FLOW_SHAPES,
+          ].map((shape) => (
             <path key={shape} className="newbuild2-flow-shape red reverse-horizontal" d={shape} />
           ))}
         </g>
@@ -680,9 +934,13 @@ export function NewBuild2HydraulicDiagram({
           </g>
           <g
             className={motionVisualActive || pumpFailureMode ? 'pump-cycle-holder-wrap auto' : 'pump-cycle-holder-wrap'}
-            transform={pumpFailureMode ? `rotate(10 ${pumpHolderCenter.x} ${pumpHolderCenter.y})` : undefined}
+            transform={
+              pumpFailureMode
+                ? `rotate(10 ${pumpHolderCenter.x} ${pumpHolderCenter.y})`
+                : (pumpRunawayMode ? `rotate(18 ${pumpHolderCenter.x} ${pumpHolderCenter.y})` : undefined)
+            }
           >
-            {motionVisualActive ? (
+            {motionVisualActive && !pumpRunawayMode ? (
               <animateTransform
                 attributeName="transform"
                 type="rotate"
@@ -724,9 +982,9 @@ export function NewBuild2HydraulicDiagram({
         </g>
 
         <g className="labels newbuild2-labels">
-          {motionVisualActive ? (
+          {showPressureReadout ? (
             <text className="newbuild2-pressure-readout" x="485" y="88">
-              {autoPressureValue.toFixed(1)}
+              {pressureReadoutValue.toFixed(1)}
             </text>
           ) : null}
           <text x="420" y="116">PRESSURE OUT</text>
@@ -897,7 +1155,7 @@ export function NewBuild2HydraulicDiagram({
         </g>
 
         <g className="newbuild2-pressure-clock" transform={`translate(${gaugeCenter.x} ${gaugeCenter.y})`} aria-label="Pressure out">
-          {motionVisualActive ? (
+          {motionVisualActive && !pumpRunawayMode ? (
             <g className="newbuild2-pressure-needle-auto">
               <animateTransform
                 attributeName="transform"

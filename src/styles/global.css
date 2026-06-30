@@ -292,6 +292,10 @@ h2 {
   fill: url("#newbuild2-red-flow-reverse-horizontal-pattern");
 }
 
+.newbuild2-flow-shape.red.down {
+  fill: url("#newbuild2-red-flow-down-fast-pattern");
+}
+
 .newbuild2-flow-shape.green.vertical {
   fill: url("#newbuild2-green-flow-vertical-pattern");
 }
@@ -302,6 +306,34 @@ h2 {
 
 .newbuild2-flow-shape.green.right-horizontal {
   fill: url("#newbuild2-green-flow-right-horizontal-pattern");
+}
+
+.newbuild2-flow-overlay.pump-runaway .newbuild2-flow-shape.red.vertical {
+  fill: url("#newbuild2-red-flow-vertical-fast-pattern");
+}
+
+.newbuild2-flow-overlay.pump-runaway .newbuild2-flow-shape.red.horizontal {
+  fill: url("#newbuild2-red-flow-horizontal-fast-pattern");
+}
+
+.newbuild2-flow-overlay.pump-runaway .newbuild2-flow-shape.red.reverse-horizontal {
+  fill: url("#newbuild2-red-flow-reverse-horizontal-fast-pattern");
+}
+
+.newbuild2-flow-overlay.pump-runaway .newbuild2-flow-shape.red.down {
+  fill: url("#newbuild2-red-flow-down-fast-pattern");
+}
+
+.newbuild2-flow-overlay.pump-runaway .newbuild2-flow-shape.green.vertical {
+  fill: url("#newbuild2-green-flow-vertical-fast-pattern");
+}
+
+.newbuild2-flow-overlay.pump-runaway .newbuild2-flow-shape.green.horizontal {
+  fill: url("#newbuild2-green-flow-horizontal-fast-pattern");
+}
+
+.newbuild2-flow-overlay.pump-runaway .newbuild2-flow-shape.green.right-horizontal {
+  fill: url("#newbuild2-green-flow-right-horizontal-fast-pattern");
 }
 
 .newbuild2-res-bubbles {
@@ -327,14 +359,48 @@ h2 {
 
 .air-chamber-red {
   fill: #ac1916;
+  stroke: #ac1916;
+  stroke-width: 2;
+  shape-rendering: geometricPrecision;
 }
 
 .air-right-green-cover {
   fill: #fff;
+  stroke: #fff;
+  stroke-width: 4;
+  shape-rendering: geometricPrecision;
 }
 
 .air-moving-element {
   filter: drop-shadow(0 1px 0 rgba(20, 24, 28, 0.18));
+}
+
+.newbuild2-runway-motion {
+  pointer-events: none;
+}
+
+.runway-chamber-cover {
+  fill: #d7d7d7;
+}
+
+.runway-chamber-green {
+  fill: #24a737;
+}
+
+.runway-chamber-red {
+  fill: #ac1916;
+  stroke: #ac1916;
+  stroke-width: 2;
+  shape-rendering: geometricPrecision;
+}
+
+.runway-moving-element {
+  filter: drop-shadow(0 1px 0 rgba(20, 24, 28, 0.18));
+}
+
+.runway-thing-red-flow {
+  fill: url("#newbuild2-red-flow-reverse-horizontal-fast-pattern");
+  opacity: 0.34;
 }
 
 .newbuild2-bleed-bubbles {
