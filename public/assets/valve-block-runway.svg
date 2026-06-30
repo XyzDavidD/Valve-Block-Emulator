@@ -1004,6 +1004,8 @@
 <path d="M654.105 257.812V304.813" stroke="#1D1D1B" stroke-width="0.982667" stroke-miterlimit="10"/>
 <path d="M676.285 257.812V304.813" stroke="#1D1D1B" stroke-width="0.982667" stroke-miterlimit="10"/>
 <path d="M729.43 257.812V304.813" stroke="#1D1D1B" stroke-width="0.982667" stroke-miterlimit="10"/>
+<path d="M1254 302H1176V293H1254V302Z" fill="#1D1D1B"/>
+<path d="M1254 835H1176V824H1254V835Z" fill="#1D1D1B"/>
 </g>
 <defs>
 <linearGradient id="paint0_linear_1049_29450" x1="548.379" y1="897.338" x2="578.905" y2="897.338" gradientUnits="userSpaceOnUse">

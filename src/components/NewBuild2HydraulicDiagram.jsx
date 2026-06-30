@@ -81,11 +81,11 @@ const RED_FLOW_SHAPES = [
 ];
 
 const ANIMATED_GREEN_FLOW_SHAPES = GREEN_FLOW_SHAPES.filter(
-  (_, index) => ![0, 1, 2, 3, 5, 6, 7, 9, 10, 11, 12, 15, 23, 24, 25, 26, 27, 28, 29].includes(index),
+  (_, index) => ![0, 1, 2, 3, 5, 6, 7, 9, 10, 11, 12, 15, 20, 21, 23, 24, 25, 26, 27, 28, 29].includes(index),
 );
 
 const ANIMATED_RED_FLOW_SHAPES = RED_FLOW_SHAPES.filter(
-  (_, index) => ![0, 1, 3, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 21, 22].includes(index),
+  (_, index) => ![0, 1, 2, 3, 6, 7, 8, 9, 10, 12, 14, 15, 16, 17, 21, 22].includes(index),
 );
 
 const PARTIAL_RED_HORIZONTAL_FLOW_SHAPES = [
@@ -215,7 +215,12 @@ airChamber.height = airChamber.bottomY - airChamber.topY;
 airChamber.greenWidth = airChamber.redBaseX - airChamber.leftX;
 airChamber.redBaseWidth = airChamber.rightX - airChamber.redBaseX;
 airChamber.travel = airChamber.greenWidth * 0.35;
-airChamber.rightGreenTravel = airChamber.rightUpperGreen.width * 0.35;
+airChamber.rightUpperGreenTravel = airChamber.rightUpperGreen.width * 0.35;
+airChamber.rightLowerGreenTravel = airChamber.rightLowerGreen.width * 0.35;
+airChamber.rightGreenCoverBleed = 12;
+airChamber.rightGreenCoverEndBleed = 24;
+airChamber.rightUpperGreenCoverOffsetY = 0;
+airChamber.rightLowerGreenCoverOffsetY = 0;
 const runwayChamber = {
   ...airChamber,
   movingStartX: airChamber.movingStartX,
@@ -265,10 +270,10 @@ export function NewBuild2HydraulicDiagram({
   const pressureNeedleAngle = clamp(-118 + ((pressure - 70) / 60) * 236, -118, 118);
   const displayedPressureNeedleAngle = pumpFailureMode ? 12 : (pumpRunawayMode ? pumpRunawayNeedleAngle : pressureNeedleAngle);
   const defaultMode = !activeAbnormalButton && !testMode;
-  const showPressureReadout = motionVisualActive || defaultMode;
-  const pressureReadoutValue = pumpRunawayMode
-    ? pumpRunawayPressure
-    : (motionVisualActive ? autoPressureValue : defaultPressureReadout);
+  const showPressureReadout = motionVisualActive || defaultMode || testMode || pumpFailureMode;
+  const pressureReadoutValue = testMode || pumpFailureMode
+    ? 0
+    : (pumpRunawayMode ? pumpRunawayPressure : (motionVisualActive ? autoPressureValue : defaultPressureReadout));
   const valveBlockHref = (() => {
     if (pumpFailureMode) return '/assets/valve-block-failure.svg';
     if (pumpRunawayMode) return '/assets/valve-block-runway.svg';
@@ -291,7 +296,8 @@ export function NewBuild2HydraulicDiagram({
   const airGreenWidth = airChamber.greenWidth - airTravel;
   const airRedExpansionX = airChamber.redBaseX - airTravel;
   const airMovingX = airChamber.movingStartX - airTravel;
-  const airRightGreenCoverWidth = airChamber.rightGreenTravel * airProgress;
+  const airRightUpperGreenCoverWidth = airChamber.rightUpperGreenTravel * airProgress;
+  const airRightLowerGreenCoverWidth = airChamber.rightLowerGreenTravel * airProgress;
   const runwayTravel = runwayChamber.travel * runwayProgress;
   const runwayGreenWidth = runwayChamber.greenWidth - runwayTravel;
   const runwayRedExpansionX = runwayChamber.redBaseX - runwayTravel;
@@ -816,16 +822,16 @@ export function NewBuild2HydraulicDiagram({
             />
             <rect
               className="air-right-green-cover"
-              x={airChamber.rightUpperGreen.x + airChamber.rightUpperGreen.width - airRightGreenCoverWidth}
-              y={airChamber.rightUpperGreen.y}
-              width={airRightGreenCoverWidth}
+              x={airChamber.rightUpperGreen.x + airChamber.rightUpperGreen.width - airRightUpperGreenCoverWidth - airChamber.rightGreenCoverBleed}
+              y={airChamber.rightUpperGreen.y + airChamber.rightUpperGreenCoverOffsetY}
+              width={airRightUpperGreenCoverWidth + airChamber.rightGreenCoverBleed + airChamber.rightGreenCoverEndBleed}
               height={airChamber.rightUpperGreen.height}
             />
             <rect
               className="air-right-green-cover"
-              x={airChamber.rightLowerGreen.x + airChamber.rightLowerGreen.width - airRightGreenCoverWidth}
-              y={airChamber.rightLowerGreen.y}
-              width={airRightGreenCoverWidth}
+              x={airChamber.rightLowerGreen.x + airChamber.rightLowerGreen.width - airRightLowerGreenCoverWidth - airChamber.rightGreenCoverBleed}
+              y={airChamber.rightLowerGreen.y + airChamber.rightLowerGreenCoverOffsetY}
+              width={airRightLowerGreenCoverWidth + airChamber.rightGreenCoverBleed + airChamber.rightGreenCoverEndBleed}
               height={airChamber.rightLowerGreen.height}
             />
             <image

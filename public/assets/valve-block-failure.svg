@@ -1550,6 +1550,8 @@
 <path d="M654.104 257.812V304.813" stroke="#1D1D1B" stroke-width="0.982667" stroke-miterlimit="10"/>
 <path d="M676.287 257.812V304.813" stroke="#1D1D1B" stroke-width="0.982667" stroke-miterlimit="10"/>
 <path d="M729.43 257.812V304.813" stroke="#1D1D1B" stroke-width="0.982667" stroke-miterlimit="10"/>
+<path d="M1254 302.164H1176V293.164H1254V302.164Z" fill="#1D1D1B"/>
+<path d="M1254 835.164H1176V824.164H1254V835.164Z" fill="#1D1D1B"/>
 <defs>
 <linearGradient id="paint0_linear_1040_80" x1="548.377" y1="897.338" x2="578.903" y2="897.338" gradientUnits="userSpaceOnUse">
 <stop stop-color="#3D3D3C"/>

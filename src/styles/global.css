@@ -366,9 +366,7 @@ h2 {
 
 .air-right-green-cover {
   fill: #fff;
-  stroke: #fff;
-  stroke-width: 4;
-  shape-rendering: geometricPrecision;
+  shape-rendering: crispEdges;
 }
 
 .air-moving-element {
